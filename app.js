@@ -2,7 +2,9 @@ const express = require('express');
 const mysql = require('mysql');
 const app = express();
 const multer = require('multer');
-const e = require("express");
+const fileUpload = require('express-fileupload');
+const bodyParser = require('body-parser');
+const _=require('lodash')
 const upload = multer()
 app.set('view engine', 'ejs');
 app.set('views', './views')
@@ -19,13 +21,46 @@ connection.connect((err,result)=>{
         console.log(' connection success !')
     }
 })
+// app.use(fileUpload({
+//     createParentPath: true
+//
+// }))
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended : true}))
 app.get('/create', (req, res) => {
     res.render('create')
 });
 app.post('/create',upload.none(),(req, res) => {
+    // try{
+    //     if (!req.files){
+    //         res.send({
+    //             status: false,
+    //             message : 'Not file uploads'
+    //
+    //         })
+    //
+    //     } else {
+    //         let img = req.files.img;
+    //         console.log(img)
+    //        img.mv('./uploads/' + img.name);
+    //         res.send({
+    //             status :true,
+    //             message : 'File is uploading !',
+    //             data :{
+    //                 name : img.name,
+    //                 mimetype: img.mimetype,
+    //                 size :img.size
+    //             }
+    //
+    //         })
+    //
+    //     }
+    //         } catch (err){
+    //     res.status(500).send(err)
+    // }
     const {name, img, age} = req.body;
     console.log(req.body)
-    const values =[
+    const values = [
         [name,img, age]
     ]
     let sql = `INSERT INTO staffs (name, img, age ) values ?`;
@@ -33,7 +68,6 @@ app.post('/create',upload.none(),(req, res) => {
         if (err){
             console.log(err)
         } else {
-            console.log(result)
            res.redirect('staffs')
         }
     });
@@ -50,10 +84,23 @@ app.get('/staffs',(req, res) => {
 app.get('/detail/:id',(req, res) => {
     let id = req.params.id
     console.log(id)
-    let sql = `SELECT *FROM staffs  WHERE id =`+ id;
+    let sql = `SELECT *FROM staffs  WHERE id = ${id}`
     connection.query(sql,(err,result)=>{
         if (err)throw Error(err);
         res.render('detail',{staffs: result })
+    })
+});
+app.get('/offset/1',(req, res) => {
+    let sql = "SELECT * FROM staffs LIMIT 5 OFFSET 0";
+    connection.query(sql,(err,result)=>{
+        if (err)throw Error(err);
+        res.render('offset',{staffs: result })
+    })
+});app.get('/offset/2',(req, res) => {
+    let sql = "SELECT * FROM staffs LIMIT 5 OFFSET 5";
+    connection.query(sql,(err,result)=>{
+        if (err)throw Error(err);
+        res.render('offset',{staffs: result })
     })
 });
 app.get('/delete/:id',(req, res)=>{
@@ -63,8 +110,8 @@ app.get('/delete/:id',(req, res)=>{
         if (err) console.log(err);
         res.redirect('/staffs')
     })
+});
 
-})
 app.listen(3100,()=>{
     console.log('http://localhost:3100/create')
 })
